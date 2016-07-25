@@ -240,6 +240,17 @@ class MangoPayPayInBankWireFactory(MangoPayPayInAbstractFactory):
     type = BANK_WIRE
 
 
+class MangoPayPayInWebFactory(MangoPayPayInAbstractFactory):
+
+    class Meta:
+        model = MangoPayPayIn
+
+    return_url = None
+    culture = None
+
+
+
+
 class MangoPayRefundFactory(factory.DjangoModelFactory):
 
     class Meta:

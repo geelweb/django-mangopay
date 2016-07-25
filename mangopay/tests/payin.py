@@ -3,9 +3,9 @@ from django.core.exceptions import ValidationError
 
 from mock import patch
 
-from ..models import MangoPayPayInByCard, MangoPayPayInBankWire
+from ..models import MangoPayPayInByCard, MangoPayPayInBankWire, MangoPayPayInWeb
 
-from .factories import MangoPayPayInFactory, MangoPayPayInBankWireFactory
+from .factories import MangoPayPayInFactory, MangoPayPayInBankWireFactory, MangoPayPayInWebFactory
 from .client import MockMangoPayApi
 from mangopay.constants import CARD_WEB, BANK_WIRE
 
@@ -67,3 +67,27 @@ class MangoPayPayInBankWireTests(TestCase):
         payin = MangoPayPayInBankWire(mangopay_user=self.pay_in.mangopay_user, mangopay_wallet=self.pay_in.mangopay_wallet)
         payin.save()
         self.assertEqual(BANK_WIRE, payin.type)
+
+class MangoPayPayInWebTests(TestCase):
+
+    def setUp(self):
+        self.pay_in = MangoPayPayInWebFactory()
+        self.pay_in.__class__ = MangoPayPayInWeb
+
+    @patch("mangopay.models.get_mangopay_api_client")
+    def test_create(self, mock_client):
+        id = 12
+        mock_client.return_value = MockMangoPayApi(pay_in_id=id)
+        self.assertIsNone(self.pay_in.mangopay_id)
+        self.pay_in.create(return_url="http://test.com/return", culture="EN")
+        MangoPayPayInWeb.objects.get(id=self.pay_in.id, mangopay_id=id)
+
+    @patch("mangopay.models.get_mangopay_api_client")
+    def test_get(self, mock_client):
+        mock_client.return_value = MockMangoPayApi()
+        self.assertIsNone(self.pay_in.return_url)
+        self.assertIsNone(self.pay_in.culture)
+        self.pay_in.mangopay_id = 12
+        self.pay_in = self.pay_in.get()
+        self.assertIsNotNone(self.pay_in.redirect_url)
+        self.assertIsNotNone(self.pay_in.culture)

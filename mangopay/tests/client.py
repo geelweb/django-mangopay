@@ -13,6 +13,8 @@ from mangopaysdk.types.bankaccountdetailsiban import BankAccountDetailsIBAN
 from mangopaysdk.types.money import Money
 from mangopaysdk.types.payinexecutiondetailsdirect import (
     PayInExecutionDetailsDirect)
+from mangopaysdk.types.payinexecutiondetailsweb import (
+    PayInExecutionDetailsWeb)
 from mangopaysdk.types.payinpaymentdetailsbankwire import (
     PayInPaymentDetailsBankWire)
 
@@ -200,8 +202,16 @@ class MockPayInApi():
         pay_in = PayIn()
         pay_in.Id = pay_in_id
         pay_in.ExecutionDate = 12312312
-        pay_in.ExecutionDetails = PayInExecutionDetailsDirect()
-        pay_in.ExecutionDetails.SecureModeRedirectURL = "https://test.com"
+        if pay_in_id == 12:
+            pay_in.ExecutionType = "WEB"
+            pay_in.ExecutionDetails = PayInExecutionDetailsWeb()
+            pay_in.ExecutionDetails.ReturnURL = "https://test.com/return"
+            pay_in.ExecutionDetails.Culture = "en"
+            pay_in.ExecutionDetails.RedirectURL = "https://example.com/"
+        else:
+            pay_in.ExecutionType = "DIRECT"
+            pay_in.ExecutionDetails = PayInExecutionDetailsDirect()
+            pay_in.ExecutionDetails.SecureModeRedirectURL = "https://test.com"
         pay_in.Status = "SUCCEEDED"
         return pay_in
 

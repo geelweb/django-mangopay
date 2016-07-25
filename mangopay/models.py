@@ -34,6 +34,8 @@ from mangopaysdk.types.payinpaymentdetailsbankwire import (
     PayInPaymentDetailsBankWire)
 from mangopaysdk.types.payinexecutiondetailsdirect import (
     PayInExecutionDetailsDirect)
+from mangopaysdk.types.payinexecutiondetailsweb import (
+    PayInExecutionDetailsWeb)
 from mangopaysdk.types.payinpaymentdetailscard import PayInPaymentDetailsCard
 from django_countries.fields import CountryField
 
@@ -495,6 +497,11 @@ class MangoPayPayIn(models.Model):
     mangopay_card = models.ForeignKey("MangoPayCard", related_name="mangopay_payins", null=True, blank=True)
     secure_mode_redirect_url = models.URLField(null=True, blank=True)
 
+    # Pay in by card web
+    return_url = models.URLField(null=True, blank=True)
+    redirect_url = models.URLField(null=True, blank=True)
+    culture = models.CharField(null=True, blank=True, max_length=2)
+
     # Pay in via bank wire
     wire_reference = models.CharField(null=True, blank=True, max_length=50)
     mangopay_bank_account = jsonfield.JSONField(null=True, blank=True)
@@ -535,6 +542,32 @@ class MangoPayPayIn(models.Model):
         self.save()
         return self
 
+class MangoPayPayInWeb(MangoPayPayIn):
+
+    class Meta:
+        proxy = True
+
+    def create(self, return_url, culture, tag=None):
+        self.return_url = return_url
+        self.culture = culture
+        super(MangoPayPayInWeb, self).create(tag)
+
+    def _get_payment_details(self):
+        payment_details = PayInPaymentDetailsCard()
+        payment_details.CardType = "CB_VISA_MASTERCARD"
+        return payment_details
+
+    def _get_execution_details(self):
+        execution_details = PayInExecutionDetailsWeb()
+        execution_details.ReturnURL = self.return_url
+        execution_details.SecureMode = "DEFAULT"
+        execution_details.Culture = self.culture
+        return execution_details
+
+    def _update(self, pay_in):
+        self.redirect_url = pay_in.ExecutionDetails.RedirectURL
+        self.culture = pay_in.ExecutionDetails.Culture
+        return super(MangoPayPayInWeb, self)._update(pay_in)
 
 class MangoPayPayInByCard(MangoPayPayIn):
 
