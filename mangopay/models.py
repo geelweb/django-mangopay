@@ -27,6 +27,7 @@ from mangopaysdk.types.money import Money
 from mangopaysdk.types.bankaccountdetailsiban import BankAccountDetailsIBAN
 from mangopaysdk.types.bankaccountdetailsus import BankAccountDetailsUS
 from mangopaysdk.types.bankaccountdetailsother import BankAccountDetailsOTHER
+from mangopaysdk.types.address import Address
 
 from mangopaysdk.types.payoutpaymentdetailsbankwire import (
     PayOutPaymentDetailsBankWire)
@@ -370,7 +371,13 @@ class MangoPayBankAccount(models.Model):
                                       related_name="mangopay_bank_accounts")
     mangopay_id = models.PositiveIntegerField(null=True, blank=True)
 
-    address = models.CharField(max_length=254)
+    owner_name = models.CharField(max_length=255)
+    address_line_1 = models.CharField(max_length=255)
+    address_line_2 = models.CharField(max_length=255)
+    city = models.CharField(max_length=255)
+    region = models.CharField(max_length=255, blank=True, null=True)
+    postal_code = models.CharField(max_length=255)
+
     account_type = models.CharField(max_length=2,
                                     choices=MANGOPAY_BANKACCOUNT_TYPE,
                                     default=BA_BIC_IBAN)  # Defaults to BIC/IBAN type
@@ -378,7 +385,7 @@ class MangoPayBankAccount(models.Model):
     iban = IBANField(blank=True, null=True)
 
     bic = BICField(blank=True, null=True)
-    country = CountryField(null=True, blank=True)
+    country = CountryField()
     account_number = models.CharField(max_length=15, null=True, blank=True)
 
     # BA_US type only fields
@@ -393,10 +400,15 @@ class MangoPayBankAccount(models.Model):
         mangopay_bank_account = BankAccount()
         mangopay_bank_account.UserId = self.mangopay_user.mangopay_id
 
-        mangopay_bank_account.OwnerName = \
-            self.mangopay_user.user.get_full_name()
+        mangopay_bank_account.OwnerName = self.owner_name
 
-        mangopay_bank_account.OwnerAddress = unicode(self.address)
+        mangopay_bank_account.OwnerAddress = Address()
+        mangopay_bank_account.OwnerAddress.AddressLine1 = self.address_line_1
+        mangopay_bank_account.OwnerAddress.AddressLine2 = self.address_line_2
+        mangopay_bank_account.OwnerAddress.City = self.city
+        mangopay_bank_account.OwnerAddress.Region = self.region
+        mangopay_bank_account.OwnerAddress.PostalCode = self.postal_code
+        mangopay_bank_account.OwnerAddress.Country = self.country.code
 
         if self.account_type == BA_BIC_IBAN:
             # BIC / IBAN type requires setting IBAN and BIC codes only
@@ -433,13 +445,6 @@ class MangoPayBankAccount(models.Model):
 
         # Shared Details for IBAN and Other
         mangopay_bank_account.Details.BIC = self.bic
-
-        if self.country:
-            mangopay_bank_account.Details.Country = self.country.code
-        else:
-            if self.account_type != BA_BIC_IBAN:
-                raise Exception("Country is required for Bank Accounts of "
-                                "types other than BIC/IBAN")
 
         created_bank_account = client.users.CreateBankAccount(
             str(self.mangopay_user.mangopay_id),
