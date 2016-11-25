@@ -454,6 +454,11 @@ class MangoPayBankAccount(models.Model):
 
         self.save()
 
+    def __unicode__(self):
+        return "%s - %s" % (
+                ' / '.join(filter(None, [self.iban, self.account_number, self.bic])),
+                self.owner_name)
+
 
 class MangoPayWallet(models.Model):
     mangopay_id = models.PositiveIntegerField(null=True, blank=True)
