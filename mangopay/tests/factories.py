@@ -102,7 +102,7 @@ class MangoPayBankAccountFactory(factory.DjangoModelFactory):
 
     mangopay_user = factory.SubFactory(MangoPayNaturalUserFactory)
     mangopay_id = None
-    address = "Hundred Acre Wood"
+    address_line_1 = "Hundred Acre Wood"
 
 
 class MangoPayIBANBankAccountFactory(MangoPayBankAccountFactory):
