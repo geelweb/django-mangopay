@@ -758,11 +758,22 @@ class MangoPayRefund(models.Model):
                               blank=True, null=True)
     result_code = models.CharField(null=True, blank=True, max_length=6)
 
+    debited_funds = MoneyField(default=0, default_currency="EUR",
+                               decimal_places=2, max_digits=12)
+
+    fees = MoneyField(default=0, default_currency="EUR",
+                               decimal_places=2, max_digits=12)
+
     def create_simple(self):
         pay_in_id = self.mangopay_pay_in.mangopay_id
         refund = Refund()
         refund.InitialTransactionId = pay_in_id
         refund.AuthorId = self.mangopay_user.mangopay_id
+        if self.debited_funds:
+            refund.DebitedFunds = python_money_to_mangopay_money(
+                self.debited_funds)
+        if self.fees:
+            refund.Fees = python_money_to_mangopay_money(self.fees)
         client = get_mangopay_api_client()
         created_refund = client.payIns.CreateRefund(pay_in_id, refund)
         self.status = created_refund.Status
