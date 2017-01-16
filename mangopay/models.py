@@ -772,8 +772,7 @@ class MangoPayRefund(models.Model):
         if self.debited_funds:
             refund.DebitedFunds = python_money_to_mangopay_money(
                 self.debited_funds)
-        if self.fees:
-            refund.Fees = python_money_to_mangopay_money(self.fees)
+        refund.Fees = python_money_to_mangopay_money(self.fees)
         client = get_mangopay_api_client()
         created_refund = client.payIns.CreateRefund(pay_in_id, refund)
         self.status = created_refund.Status
