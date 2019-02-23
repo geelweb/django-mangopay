@@ -183,6 +183,7 @@ class MangoPayUser(models.Model):
 
 class MangoPayNaturalUser(MangoPayUser):
     # Regular Authenication Fields:
+    objects = models.Manager()
     occupation = models.CharField(blank=True, null=True, max_length=254)
     income_range = models.SmallIntegerField(
         blank=True, null=True, choices=INCOME_RANGE_CHOICES)
@@ -226,6 +227,7 @@ class MangoPayNaturalUser(MangoPayUser):
 
 
 class MangoPayLegalUser(MangoPayUser):
+    objects = models.Manager()
     business_name = models.CharField(max_length=254)
     generic_business_email = models.EmailField(max_length=254)
 
@@ -721,6 +723,7 @@ class MangoPayCardRegistration(models.Model):
         MangoPayUser, models.CASCADE, related_name="mangopay_card_registrations")
     mangopay_card = models.OneToOneField(
         MangoPayCard, null=True, blank=True,
+        on_delete=models.CASCADE,
         related_name="mangopay_card_registration")
 
     def create(self, currency):
