@@ -88,7 +88,7 @@ class MangoPayUser(models.Model):
     last_edit_timestamp = models.DateTimeField(auto_now=True, null=True)
 
     mangopay_id = models.PositiveIntegerField(null=True, blank=True)
-    user = models.ForeignKey(auth_user_model, related_name="mangopay_users")
+    user = models.ForeignKey(auth_user_model, models.CASCADE, related_name="mangopay_users")
     type = models.CharField(max_length=1, choices=USER_TYPE_CHOICES,
                             null=True)
     first_name = models.CharField(null=True, blank=True, max_length=99)
@@ -285,6 +285,7 @@ class MangoPayLegalUser(MangoPayUser):
 class MangoPayDocument(models.Model):
     mangopay_id = models.PositiveIntegerField(null=True, blank=True)
     mangopay_user = models.ForeignKey(MangoPayUser,
+                                      models.CASCADE,
                                       related_name="mangopay_documents")
     type = models.CharField(max_length=2,
                             choices=DOCUMENT_TYPE_CHOICES)
@@ -346,6 +347,7 @@ def page_storage():
 
 class MangoPayPage(models.Model):
     document = models.ForeignKey(MangoPayDocument,
+                                 models.CASCADE,
                                  related_name="mangopay_pages")
     file = django_filepicker.models.FPUrlField(
         max_length=255,
@@ -370,6 +372,7 @@ class MangoPayPage(models.Model):
 
 class MangoPayBankAccount(models.Model):
     mangopay_user = models.ForeignKey(MangoPayUser,
+                                      models.CASCADE,
                                       related_name="mangopay_bank_accounts")
     mangopay_id = models.PositiveIntegerField(null=True, blank=True)
 
@@ -465,7 +468,7 @@ class MangoPayBankAccount(models.Model):
 class MangoPayWallet(models.Model):
     mangopay_id = models.PositiveIntegerField(null=True, blank=True)
     mangopay_user = models.ForeignKey(
-        MangoPayUser, related_name="mangopay_wallets")
+        MangoPayUser, models.CASCADE, related_name="mangopay_wallets")
     currency = models.CharField(max_length=3, default="EUR")
 
     def create(self, description):
@@ -490,8 +493,8 @@ class MangoPayWallet(models.Model):
 
 class MangoPayPayIn(models.Model):
     mangopay_id = models.PositiveIntegerField(null=True, blank=True)
-    mangopay_user = models.ForeignKey(MangoPayUser, related_name="mangopay_payins")
-    mangopay_wallet = models.ForeignKey(MangoPayWallet, related_name="mangopay_payins")
+    mangopay_user = models.ForeignKey(MangoPayUser, models.CASCADE, related_name="mangopay_payins")
+    mangopay_wallet = models.ForeignKey(MangoPayWallet, models.CASCADE, related_name="mangopay_payins")
 
     execution_date = models.DateTimeField(blank=True, null=True)
     status = models.CharField(max_length=9, choices=TRANSACTION_STATUS_CHOICES,
@@ -504,7 +507,7 @@ class MangoPayPayIn(models.Model):
     type = models.CharField(null=False, blank=False, choices=MANGOPAY_PAYIN_CHOICES, max_length=10)
 
     # Pay in by card via web - mangopay_card needs custom validation so it's not null on save
-    mangopay_card = models.ForeignKey("MangoPayCard", related_name="mangopay_payins", null=True, blank=True)
+    mangopay_card = models.ForeignKey("MangoPayCard", models.CASCADE, related_name="mangopay_payins", null=True, blank=True)
     secure_mode_redirect_url = models.URLField(null=True, blank=True)
 
     # Pay in by card web
@@ -646,10 +649,13 @@ class MangoPayPayInBankWire(MangoPayPayIn):
 class MangoPayPayOut(models.Model):
     mangopay_id = models.PositiveIntegerField(null=True, blank=True)
     mangopay_user = models.ForeignKey(MangoPayUser,
+                                      models.CASCADE,
                                       related_name="mangopay_payouts")
     mangopay_wallet = models.ForeignKey(MangoPayWallet,
+                                        models.CASCADE,
                                         related_name="mangopay_payouts")
     mangopay_bank_account = models.ForeignKey(MangoPayBankAccount,
+                                              models.CASCADE,
                                               related_name="mangopay_payouts")
     execution_date = models.DateTimeField(blank=True, null=True)
     status = models.CharField(max_length=9, choices=TRANSACTION_STATUS_CHOICES,
@@ -712,7 +718,7 @@ class MangoPayCard(models.Model):
 class MangoPayCardRegistration(models.Model):
     mangopay_id = models.PositiveIntegerField(null=True, blank=True)
     mangopay_user = models.ForeignKey(
-        MangoPayUser, related_name="mangopay_card_registrations")
+        MangoPayUser, models.CASCADE, related_name="mangopay_card_registrations")
     mangopay_card = models.OneToOneField(
         MangoPayCard, null=True, blank=True,
         related_name="mangopay_card_registration")
@@ -750,8 +756,10 @@ class MangoPayCardRegistration(models.Model):
 class MangoPayRefund(models.Model):
     mangopay_id = models.PositiveIntegerField(null=True, blank=True)
     mangopay_user = models.ForeignKey(MangoPayUser,
+                                      models.CASCADE,
                                       related_name="mangopay_refunds")
     mangopay_pay_in = models.ForeignKey(MangoPayPayIn,
+                                        models.CASCADE,
                                         related_name="mangopay_refunds")
     execution_date = models.DateTimeField(blank=True, null=True)
     status = models.CharField(max_length=9, choices=TRANSACTION_STATUS_CHOICES,
@@ -786,9 +794,9 @@ class MangoPayRefund(models.Model):
 class MangoPayTransfer(models.Model):
     mangopay_id = models.PositiveIntegerField(null=True, blank=True)
     mangopay_debited_wallet = models.ForeignKey(
-        MangoPayWallet, related_name="mangopay_debited_wallets")
+        MangoPayWallet, models.CASCADE, related_name="mangopay_debited_wallets")
     mangopay_credited_wallet = models.ForeignKey(
-        MangoPayWallet, related_name="mangopay_credited_wallets")
+        MangoPayWallet, models.CASCADE, related_name="mangopay_credited_wallets")
     debited_funds = MoneyField(default=0, default_currency="EUR",
                                decimal_places=2, max_digits=12)
     execution_date = models.DateTimeField(blank=True, null=True)
