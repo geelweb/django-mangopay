@@ -1,4 +1,4 @@
-import urllib2
+from urllib.request import urlopen
 import base64
 import jsonfield
 from datetime import datetime
@@ -367,7 +367,7 @@ class MangoPayPage(models.Model):
                                        self.document.mangopay_id)
 
     def _file_bytes(self):
-        response = urllib2.urlopen(self.file)
+        response = urlopen(self.file)
         bytes = base64.b64encode(response.read())
         return bytes
 
